@@ -253,6 +253,8 @@ fn init_repo(n: u64) -> Result<std::path::PathBuf, anyhow::Error> {
     }
 }
 
+const BSD3_LICENSE: &[u8] = include_bytes!("./BSD3_LICENSE");
+
 fn write_nary_tuple(root: &std::path::Path, n: u64) -> Result<(), anyhow::Error> {
     let mut f = std::fs::File::create(root.join("go.mod"))?;
     f.write_all(
@@ -362,8 +364,11 @@ func (t Tuple{inst_params}) Unpack() {multiple_ret}{{
         )
         .as_bytes(),
     )?;
-
     std::mem::drop(f);
+    {
+        std::fs::File::create(root.join("LICENSE"))?.write_all(BSD3_LICENSE)?;
+    }
+
     // all files ready, now try to make a reproducible git repo
 
     let repo = git2::Repository::init(&root)?;
@@ -371,6 +376,7 @@ func (t Tuple{inst_params}) Unpack() {multiple_ret}{{
     let mut tree = repo.index()?;
     tree.add_path(std::path::Path::new("go.mod"))?;
     tree.add_path(std::path::Path::new("tuple.go"))?;
+    tree.add_path(std::path::Path::new("LICENSE"))?;
     let tree_id = tree.write_tree()?;
     std::mem::drop(tree);
 
