@@ -6,8 +6,17 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-tide = "0.16.0"
+axum = "0.5"
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
-maud = { version = "0.23.0", features = ["tide"] }
+maud = "0.23.0"
 include-repo = "1.0.0"
+tempfile = "3.3.0"
+git2 = "0.14.4"
+axum-macros = "0.2.2"
+anyhow = "1.0.57"
+tower-http = { version = "0.3.0", features = ["fs", "trace"] }
+tower-service = "0.3.1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tower = "0.4.12"
