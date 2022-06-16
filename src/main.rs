@@ -1,10 +1,15 @@
-use std::io::{Read, Write};
 use std::collections::HashMap;
+use std::io::{Read, Write};
 
 use anyhow::Context;
 use axum::{
-    extract::{Path, Query}, http::StatusCode, response::Html, response::IntoResponse, routing::get, Router,
     body::HttpBody,
+    extract::{Path, Query},
+    http::StatusCode,
+    response::Html,
+    response::IntoResponse,
+    routing::get,
+    Router,
 };
 use maud::html;
 use tower_http::trace::TraceLayer;
@@ -54,7 +59,10 @@ async fn main() -> Result<(), axum::http::Error> {
         .route("/source.tar.gz", get(source_code))
         .route("/tuple", get(tuple))
         .route("/tuple/:n/tuple", get(tuple_n))
-        .route("/tuple/:n/tuple.git/*tree", get(tuple_n_git_handler).post(tuple_n_git_handler))
+        .route(
+            "/tuple/:n/tuple.git/*tree",
+            get(tuple_n_git_handler).post(tuple_n_git_handler),
+        )
         .layer(TraceLayer::new_for_http());
 
     axum::Server::bind(&std::net::SocketAddr::from(([0, 0, 0, 0], 8080)))
@@ -118,7 +126,9 @@ async fn tuple_n_git_handler(
             println!("unhandled git error: {}", e);
             axum::http::Response::builder()
                 .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(axum::body::Full::new("internal server error".as_bytes().into()))
+                .body(axum::body::Full::new(
+                    "internal server error".as_bytes().into(),
+                ))
                 .unwrap()
         }
     }
@@ -153,7 +163,10 @@ async fn tuple_n_git(
             let output = child.wait_with_output().unwrap();
 
             if !output.status.success() {
-                anyhow::bail!("git-upload-pack --advertise-refs did not have success: {}", output.status);
+                anyhow::bail!(
+                    "git-upload-pack --advertise-refs did not have success: {}",
+                    output.status
+                );
             }
 
             let mut resp_body = Vec::with_capacity(output.stdout.len());
@@ -162,10 +175,13 @@ async fn tuple_n_git(
             resp_body.extend_from_slice(&output.stdout);
 
             axum::http::Response::builder()
-                      .header("Content-Type", "application/x-git-upload-pack-advertisement")
-                      .body(axum::body::Full::new(resp_body.into()))
-                      .context("error building response")
-        },
+                .header(
+                    "Content-Type",
+                    "application/x-git-upload-pack-advertisement",
+                )
+                .body(axum::body::Full::new(resp_body.into()))
+                .context("error building response")
+        }
         "/git-upload-pack" => {
             // TODO: check Content-type
             let body_data = req.body_mut().data().await.unwrap();
@@ -195,10 +211,10 @@ async fn tuple_n_git(
 
             // done, return response
             axum::http::Response::builder()
-                      .header("Content-Type", "application/x-git-upload-pack-result")
-                      .body(axum::body::Full::new(resp.into()))
-                      .context("error building response")
-        },
+                .header("Content-Type", "application/x-git-upload-pack-result")
+                .body(axum::body::Full::new(resp.into()))
+                .context("error building response")
+        }
         p => {
             anyhow::bail!("not supported: {}", p);
         }
