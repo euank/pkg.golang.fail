@@ -88,7 +88,7 @@ async fn tuple() -> impl IntoResponse {
         h2 { "n-ary generic tuple" }
         p {
             "This package provides a set of n-ary generic tuple type, for all n! " br;
-            "Due to some fundamental limitations, we've ended up splitting it up as one N-ary tuple per unique go package (though it is possible to get a range too!)" br;
+            "Due to some fundamental limitations, we've ended up splitting it up as one N-ary tuple per unique go package, so you'll need a go.mod entry per n-tuple." br;
             br;
             "What does this look like in practice? Well, let's look at some sample code using this tuple type:"
             pre {

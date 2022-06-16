@@ -213,26 +213,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "guple"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "axum",
- "axum-macros",
- "git2",
- "include-repo",
- "maud",
- "serde",
- "tempfile",
- "tokio",
- "tower",
- "tower-http",
- "tower-service",
- "tracing",
- "tracing-subscriber",
-]
-
-[[package]]
 name = "heck"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -647,6 +627,26 @@ name = "pkg-config"
 version = "0.3.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1df8c4ec4b0627e53bdf214615ad287367e482558cf84b109250b37464dc03ae"
+
+[[package]]
+name = "pkg-golang-fail"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "axum-macros",
+ "git2",
+ "include-repo",
+ "maud",
+ "serde",
+ "tempfile",
+ "tokio",
+ "tower",
+ "tower-http",
+ "tower-service",
+ "tracing",
+ "tracing-subscriber",
+]
 
 [[package]]
 name = "proc-macro-error"
