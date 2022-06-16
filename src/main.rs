@@ -42,7 +42,7 @@ async fn main() -> Result<(), axum::http::Error> {
             }
             h3 { "FAQ" }
             p.faq {
-                h4 { "What language is this site in?" }
+                h4 { "What language is this site written in?" }
                 p { "Rust, of course" }
                 h4 { "Where's the source code?" }
                 p {
