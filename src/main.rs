@@ -1,16 +1,13 @@
-use std::future::Future;
 use std::io::{Read, Write};
-use std::sync::Arc;
 use std::collections::HashMap;
 
 use anyhow::Context;
 use axum::{
-    extract::{Path, Extension, Query}, http::StatusCode, response::Html, response::IntoResponse, routing::get, Router,
+    extract::{Path, Query}, http::StatusCode, response::Html, response::IntoResponse, routing::get, Router,
     body::HttpBody,
 };
 use maud::html;
 use tower_http::trace::TraceLayer;
-use tower_service::Service;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 const SOURCE_CODE: &[u8] = include_repo::include_repo!();
@@ -44,7 +41,7 @@ async fn main() -> Result<(), axum::http::Error> {
                 p { "Rust, of course" }
                 h4 { "Where's the source code?" }
                 p {
-                    "On github " a href="https://github.com/euank/gupl" { "here" } ", or as an archive " a href="/source.tar.gz" { "here" } "." br;
+                    "On github " a href="https://github.com/euank/pkg.golang.fail" { "here" } ", or as an archive " a href="/source.tar.gz" { "here" } "." br;
                 }
                 h4 { "Should I use any of these packages?" }
                 p { a href="https://youtu.be/gIVGftIWt4s?t=2" { "I just don't know" } }
@@ -135,20 +132,13 @@ async fn tuple_n_git(
     // serve up a git repo
     // total hack, _but_ I can't find a good in-memory git repo option, so serve em up via the
     // filesystem.
-    let repo = match init_repo(n) {
-        Ok(r) => r,
-        Err(e) => {
-            println!("error making repo: {}", e);
-            panic!("TODO");
-            // return Err(e);
-        }
-    };
+    let repo = init_repo(n)?;
 
     // and now handle the clone if request
     match path.as_str() {
         "/info/refs" => {
             if query.get("service").unwrap_or(&"".to_string()) != &"git-upload-pack".to_string() {
-                panic!("unsupported service");
+                anyhow::bail!("unsupported service; use a better git client");
             }
 
             let child = std::process::Command::new("git-upload-pack")
@@ -163,7 +153,7 @@ async fn tuple_n_git(
             let output = child.wait_with_output().unwrap();
 
             if !output.status.success() {
-                panic!("TODO");
+                anyhow::bail!("git-upload-pack --advertise-refs did not have success: {}", output.status);
             }
 
             let mut resp_body = Vec::with_capacity(output.stdout.len());
@@ -215,7 +205,7 @@ async fn tuple_n_git(
     }
 }
 
-fn init_repo(n: u64) -> Result<std::path::PathBuf, StatusCode> {
+fn init_repo(n: u64) -> Result<std::path::PathBuf, anyhow::Error> {
     let path: std::path::PathBuf = format!("repos/{}", n).into();
     match std::fs::read_dir(&path) {
         Ok(_) => return Ok(path),
@@ -223,17 +213,15 @@ fn init_repo(n: u64) -> Result<std::path::PathBuf, StatusCode> {
             println!("not found: {}", n);
             // we should create it
         }
-        Err(e) => {
-            println!("error: {}", e);
-            panic!("TODO");
-            //return Err(axum::Error::new(e));
+        r => {
+            r?;
         }
     };
 
-    std::fs::create_dir_all("repos").map_err(|e| StatusCode::INTERNAL_SERVER_ERROR)?;
+    std::fs::create_dir_all("repos")?;
     // create it
-    let tmp = tempfile::TempDir::new_in("repos").map_err(|e| StatusCode::INTERNAL_SERVER_ERROR)?;
-    write_nary_tuple(tmp.path(), n).map_err(|e| StatusCode::INTERNAL_SERVER_ERROR)?;
+    let tmp = tempfile::TempDir::new_in("repos")?;
+    write_nary_tuple(tmp.path(), n)?;
 
     // repo created; persist the tempfile into place atomically and away we go
     let tmp_path = tmp.into_path();
@@ -245,7 +233,7 @@ fn init_repo(n: u64) -> Result<std::path::PathBuf, StatusCode> {
             // race, it's already there, so it's right
             Ok(path)
         }
-        Err(e) => Err(StatusCode::INTERNAL_SERVER_ERROR),
+        Err(e) => Err(e)?,
     }
 }
 
@@ -281,7 +269,6 @@ go 1.18"#,
             .map(|i| format!("T{i} T{i}"))
             .collect::<Vec<_>>()
             .join("\n\t")
-            + ";"
     };
 
     let inst_params = if n == 0 {
@@ -334,18 +321,26 @@ go 1.18"#,
     let mut f = std::fs::File::create(root.join("tuple.go"))?;
     f.write_all(
         format!(
-            r#"package tuple
+            r#"// Package tuple provides an {n}-ary tuple implementation. This is useful for cases
+// where multiple values should be grouped together, such as for passing across channels.
+// Multiple returns and n-ary tuples may be converted between as well by using the 'New' method to
+// go from n-ary return to a Tuple, and using Tuple.Unpack to convert in the other direction.
+package tuple
 
+// Tuple implements an {n}-ary generic tuple.
+// It may be used
 type Tuple{constraints} struct {{
-    {tuple_members}
+	{tuple_members}
 }}
 
+// New constructs a new tuple from the given arguments.
 func New{constraints}({new_args}) Tuple{inst_params} {{
-  return Tuple{inst_params}{{{struct_inst_body}}}
+	return Tuple{inst_params}{{{struct_inst_body}}}
 }}
 
+// Unpack unpacks a Tuple via multiple-return of the contained data.
 func (t Tuple{inst_params}) Unpack() {multiple_ret}{{
-    {multiple_ret_body}
+	{multiple_ret_body}
 }}
 "#
         )
