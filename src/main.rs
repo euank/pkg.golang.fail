@@ -145,6 +145,9 @@ async fn tuple_n_git(
     let repo = init_repo(n)?;
 
     // and now handle the clone if request
+    // Portions of this code are derived from palletizer-rs https://github.com/de-vri-es/palletizer-rs/tree/0fda76a8c398a266f65f517c47fc4a55ca3faaf7
+    // Original code Copyright (c) 2020, Maarten de Vries, used under the terms of the BSD-2 license.
+    // Modifications are under the AGPL, per this repo's license
     match path.as_str() {
         "/info/refs" => {
             if query.get("service").unwrap_or(&"".to_string()) != &"git-upload-pack".to_string() {
