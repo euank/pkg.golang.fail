@@ -80,7 +80,7 @@ async fn source_code() -> impl IntoResponse {
         .unwrap()
 }
 
-const TUPLE_EXAMPLE: &'static str = include_str!("./tuple_example.go");
+const TUPLE_EXAMPLE: &str = include_str!("./tuple_example.go");
 
 async fn tuple() -> impl IntoResponse {
     Html(html! {
@@ -106,10 +106,10 @@ async fn tuple_n(req: axum::http::Request<axum::body::Body>) -> impl IntoRespons
     let query = req.uri().query().unwrap_or("");
 
     if query == "go-get=1" {
-        return Html(html! {
+        Html(html! {
             (maud::DOCTYPE)
             meta name="go-import" content=(format!("pkg.golang.fail{} git https://pkg.golang.fail{}.git", path, path));
-        }.into_string());
+        }.into_string())
     } else {
         Html("<h3>No go get parameter</h3>".into())
     }
